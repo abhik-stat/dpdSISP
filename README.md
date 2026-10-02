@@ -11,3 +11,28 @@ Code accompanying:
 
 > Ghosh, A. and Thoresen, M. **Robust and Scalable Sure Screening of Fixed Effects in
 > Ultrahigh-dimensional Linear Mixed Models,** which is presently under review in *Statistics and Computing*.
+
+
+
+### Citation
+
+If you use this code, please cite:
+
+```bibtex
+@article{ghosh_thoresen_dpdsisp,
+  title   = {Robust and Scalable Sure Screening of Fixed Effects in Ultrahigh-dimensional
+             Linear Mixed Models},
+  author  = {Ghosh, Abhik and Thoresen, Magne},
+  journal = {Statistics and Computing},
+  year    = {2026},
+  note    = {Under revision; update with volume/pages/DOI upon acceptance}
+}
+```
+
+### Contact
+
+For questions regarding the code or the associated paper, 
+please contact Dr. Abhik Ghosh at abhik.ghosh.stat@gmail.com.
+
+Bug reports, suggestions, and pull requests are welcome. 
+
