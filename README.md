@@ -1,5 +1,4 @@
-# dpdSISP
-Robust Sure Screening for Ultrahigh-Dimensional Linear Mixed Models using DPD-SISP
+# dpdSISP: Robust Sure Screening for Ultrahigh-Dimensional Linear Mixed Models using DPD-SISP
 
 **DPD-SISP** is a minimum density power divergence (DPD) estimator based marginal screening procedure for
 fixed-effects in linear mixed models. It first *whitens* the data using a proxy for the unknown
