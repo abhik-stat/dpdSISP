@@ -7,17 +7,22 @@ random-effects covariance structure, then ranks candidate covariates by a robust
 association statistic, designed to remain reliable when a fraction of observations are
 contaminated, and to scale to tens of thousands of candidates.
 
-Code accompanying:
+This repository contains R Codes accompanying:
 
 > Ghosh, A. and Thoresen, M. **Robust and Scalable Sure Screening of Fixed Effects in
 > Ultrahigh-dimensional Linear Mixed Models,** which is presently under review in *Statistics and Computing*.
 
 
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+<br>
+<br>
 
 
 
-
-### Citation
+## Citation
 
 If you use this code, please cite:
 
@@ -32,7 +37,7 @@ If you use this code, please cite:
 }
 ```
 
-### Contact
+## Contact
 
 For questions regarding the code or the associated paper, 
 please contact Dr. Abhik Ghosh at abhik.ghosh.stat@gmail.com.
