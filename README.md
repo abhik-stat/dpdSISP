@@ -100,7 +100,7 @@ R/
 | `pick_col()` | Resolves a contamination target (`"active"`/`"inactive"`/a specific column) to an actual column index |
 | `summarise_runs()` | Aggregates replications into the paper's table format, reporting defiiferent summary measures including median TPR,  EmpSSP, etc. |
 | `boxplot_enhanced()` | Personalized enhanced boxplot/violin plotting function, used to generate some figures of the main paper |
-| ` %||% ` | Null-coalescing operator (`a %||% b` is `a` unless `NULL`, else `b`)|
+| `%``|``|``% ` | Null-coalescing operator (`a %||% b` is `a` unless `NULL`, else `b`)|
 
 ### Notes on the implementation
 
