@@ -35,8 +35,6 @@ as a generic functions, along with necessary background and heper function, in `
 install.packages(c("MASS", "mvtnorm", "lme4", "glmnet", "Matrix"))
 ```
 
----
----
 
 
 ### Repository structure
