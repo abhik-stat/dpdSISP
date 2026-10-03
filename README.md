@@ -1,4 +1,4 @@
-# dpdSISP: Robust Sure Screening for Linear Mixed Models
+# dpdSISP: Robust Sure Screening for Ultrahigh-Dimensional Linear Mixed Models using DPD-SISP
 
 **DPD-SISP** is a minimum density power divergence (DPD) estimator based marginal screening procedure for
 fixed-effects in linear mixed models. It first *whitens* the data using a proxy for the unknown
@@ -11,15 +11,14 @@ This repository contains R Codes accompanying:
 > Ghosh, A. and Thoresen, M. **Robust and Scalable Sure Screening of Fixed Effects in
 > Ultrahigh-dimensional Linear Mixed Models,** which is presently under review in *Statistics and Computing*.
 
-
 <!-- badges: start -->
 
 <!-- badges: end -->
 
 <br>
-<br>
 
 
+---
 
 ## General Function Library
 
@@ -123,7 +122,134 @@ R/
 
 
 ---
+
+
+## Reproducing Simulation Study from the Paper
+
+This section provides instructions for reproducing the simulation results presented 
+in the manuscript Ghosh and Thoresen (2026) using the master script `simulation_script.R`.
+
+The main script `simulation_script.R` executes Monte Carlo experiments comparing 
+various screening procedures under high-dimensional LMM across various 
+contamination schemes, (C0)--(C5) as specified in the manuscript, 
+for a given simulation specification.
+
+The script automatically:
+
+1. Loads required core packages and helper routines.
+2. Configures single-core operations for BLAS/LAPACK to prevent thread oversubscription.
+3. Initializes a parallel backend (`doParallel` / `foreach`) reserving standard system CPU cores.
+4. Generates baseline LMM datasets using `fsimR` package.
+5. Iterates through contamination scenarios, running specified benchmark and DPD methods.
+6. Exports raw CSV results, summary tables, and publication-ready PDF plots.
+
 ---
+
+### Configuration Parameters
+
+All user-configurable parameters are defined at the beginning of 
+`simulation_script.R` under **Section 1 (USER CONFIGURATION)**:
+
+| Configuration Parameter | Default (Specific Options) | Description |
+| --- | --- | --- |
+| `p` | `1000` | Number of fixed-effect covariates ($p$). |
+| `ITS` | `100` | Number of Monte Carlo replications. |
+| `q` | `4` | Dimension of the random-effects vector ($q$). |
+| `FIXED_DESIGN` | `TRUE` (`TRUE` / `FALSE`) | Design matrix regime. `TRUE` fixes design matrices $X$ and $Z$ across Monte Carlo replications; `FALSE` regenerates design matrices in every replication. |
+| `LeaveCore` | `1` (`0`, `1`) | `1` means a CPU core is left unused for system stability during parallel processing. |
+| `BASE_SEED` | `20260101L` | Global seed for random number generation to ensure exact reproducibility. |
+| `re` | `"R1"` (`"R1"`, `"R2"`) | Random-effects structure as defined in the manuscript. |
+| `sigma2_b` | `1` | Variance of the random effects ($\sigma_b^2$). |
+| `sigma` | `1` | Error standard deviation ($\sigma$). |
+| `rho_b` | `0.3` | Correlation parameter among random effects ($\rho_b$). |
+| `signal` | `"S2"` (`"S1"`, `"S2"`) | True active predictor sparsity pattern:<br>• `"S1"`: active predictors at positions $1:5$<br>• `"S2"`: active predictors at positions $\{5, 10, 50, 100, 200\}$ |
+| `kappa` | `0.2` (`0`, `0.2`, etc.) | Signal decay parameter ($B = n^{-\kappa}$):<br>• `0`: signal magnitude remains constant with sample size<br>• `0.2`: signal magnitude decreases with sample size |
+| `sigx` | `"CS"` (`"I"`, `"CS"`, `"AR1"`) | Covariance structure of fixed-effect predictors $X$: Independent (`"I"`), Compound Symmetry (`"CS"`), or First-order Autoregressive (`"AR1"`). |
+| `rho_x` | `0.5` | Off-diagonal predictor correlation parameter ($\rho_x$) for CS/AR1 structures. |
+| `m` | `10` | Total number of subjects/clusters ($m$). |
+| `ni` | `rep(c(10, 15, 20, 25, 30), 2)` | Vector or scalar specifying sample sizes per cluster ($n_i$). |
+| `dist` | `"gauss"` (`"gauss"`, `"heavy"`, `"skew"`, `"RE_t5"`) | Distributional specification for errors and random effects:<br>• `"gauss"`: Normal errors + Normal random effects<br>• `"heavy"`: Heavy-tailed $t_5$ errors + Normal random effects<br>• `"skew"`: Skew-normal errors + Normal random effects<br>• `"RE_t5"`: Normal errors + Multivariate-$t_5$ random effects |
+| `sizes` | `seq(10, 200, 20)` | Grid of retained model sizes ($d$) evaluated in variable screening. |
+
+
+Contamination Schemes (C0)--(C5) are as specified in the manuscript (they can be changed under the settings `CONTAM`): 
+
+* **$C0$**: Clean baseline data (0% contamination).
+* **$C1$**: Casewise additive contamination on the response vector $y$ ($5\%$ and $10\%$).
+* **$C2$**: Casewise additive contamination on the first active fixed-effect predictors ($5\%$ and $10\%$).
+* **$C3$**: High-leverage outlier contamination on the first inactive fixed-effect predictors ($5\%$ and $10\%$).
+* **$C4$**: High-leverage outlier contamination on random-effect design matrix $Z$ ($5\%$ and $10\%$).
+* **$C5$**: Cluster-level block contamination affecting both response $y$ and predictors $X$ ($20\%$ clusters).
+
+---
+
+
+
+### Instructions for Execution
+
+First, install the additionally required pakages for its own parallel execution, data generation,
+reproducible parallel RNG streams, skew-normal error generation, and single-threaded BLAS timing, respectively:
+```r
+install.packages(c("foreach", "doParallel"))
+install.packages(c("doRNG", "sn", "RhpcBLASctl"))
+```
+
+Also, install the package for data generation:
+```r
+install.packages("devtools")
+devtools::install_github("abhik-stat/fsimR")
+```
+
+<br>
+
+#### Option A: Running interactively in `R` / `RStudio`
+
+1. Open the R session from the package root directory.
+2. Edit configuration options in `simulation_script.R` if desired.
+3. Execute the script:
+```R
+source("simulation_script.R")
+
+```
+
+
+
+#### Option B: Running from terminal / command line
+
+```bash
+# Execute in background with log output
+Rscript simulation_script.R
+
+```
+
+---
+
+### Generated Results and Output Structure
+
+When `simulation_script.R` runs, it dynamically creates output directories and populates them as follows:
+
+```text
+.
+├── <TAG>_<TIMESTAMP>.log         # High-precision execution log with timestamps
+├── <TAG>_summary.csv             # Consolidated summary metrics (TPR, EmpSSP, FDP, MinMS)
+├── Results (Raw)/                # Per-scheme raw replication data
+│   ├── <TAG>_C0_prop00.csv
+│   ├── <TAG>_C1_prop05.csv
+│   ├── <TAG>_proxy_errors.csv   # Operator-norm error summaries for proxy estimators
+│   └── ...
+└── Figures/                      # Generated visualization plots
+    ├── <TAG>_MinMS_boxplots.pdf  # Minimum model size boxplots per contamination cell
+    ├── <TAG>_runtime_boxplots.pdf# Computational runtime comparisons
+    └── <TAG>_TPRcurve.pdf        # Publication-ready TPR curves across retained model sizes (d)
+
+```
+
+*(Note: `<TAG>` is a auto-generated string summarizing the configuration, e.g., `S2_R1_CS(0.5)_RE(1_0.3)_m10_ni10-15-20-25-30_RE_t5_p1000_Bk2`)*
+
+
+---
+
+
 
 <br>
 <br>
