@@ -17,15 +17,16 @@ This repository contains R Codes accompanying:
 
 <br>
 
+---
 
 ---
+
 
 ## General Function Library
 
 Every screening procedures used in our study (Ghosh and Thoresen, 2026) is defined 
 as a generic functions, along with necessary background and heper function, in `R/`. 
 
-<br>
 
 ### Requirements
 
@@ -34,7 +35,6 @@ as a generic functions, along with necessary background and heper function, in `
 ```r
 install.packages(c("MASS", "mvtnorm", "lme4", "glmnet", "Matrix"))
 ```
-
 
 
 ### Repository structure
@@ -100,7 +100,7 @@ R/
 | `pick_col()` | Resolves a contamination target (`"active"`/`"inactive"`/a specific column) to an actual column index |
 | `summarise_runs()` | Aggregates replications into the paper's table format, reporting defiiferent summary measures including median TPR,  EmpSSP, etc. |
 | `boxplot_enhanced()` | Personalized enhanced boxplot/violin plotting function, used to generate some figures of the main paper |
-| `%``|``|``% ` | Null-coalescing operator (`a %||% b` is `a` unless `NULL`, else `b`)|
+| `%||%` | Null-coalescing operator (`a %||% b` is `a` unless `NULL`, else `b`)|
 
 ### Notes on the implementation
 
@@ -118,6 +118,10 @@ R/
   covariance; it needs a ground truth real data does not have. It is used in simulation, 
   only to examine the cost of proxy estimation.
 
+
+<br>
+
+---
 
 ---
 
@@ -245,14 +249,160 @@ When `simulation_script.R` runs, it dynamically creates output directories and p
 *(Note: `<TAG>` is a auto-generated string summarizing the configuration, e.g., `S2_R1_CS(0.5)_RE(1_0.3)_m10_ni10-15-20-25-30_RE_t5_p1000_Bk2`)*
 
 
+<br>
+
+---
+
 ---
 
 
+## Real Data Application: Reproducing ADNI-2 analyses from the paper 
+
+This section provides instructions for reproducing the real data application results 
+presented in the manuscript Ghosh and Thoresen (2026) using the master script 
+`Data_analysis_script.R`. This script executes the complete analytical workflow 
+integrating longitudinal cognitive scores (MMSE) and high-dimensional blood gene expression profiles 
+from the Alzheimer's Disease Neuroimaging Initiative Phase 2(ADNI-2) cohort, 
+performing required preprocessing and comparing various robust screening procedures 
+and stability selection under high-dimensional LMM.
 
 <br>
+
+### Data Availability & Access Statement
+
+**Important Note on Data Privacy:** 
+The datasets utilized in this study contain restricted human subject health information 
+from the Alzheimer's Disease Neuroimaging Initiative (ADNI) 
+and cannot be shared or redistributed directly with this repository.
+
+To run the provided R scripts, users must independently obtain data access permissions via teh following steps:
+
+1. Register at [adni.loni.usc.edu](https://adni.loni.usc.edu). Request the `ADNIMERGE2` R
+   package (Study Files -> Study Info -> Data & Database) and install it locally:
+   `install.packages("path/to/ADNIMERGE2_<version>.tar.gz", repos = NULL, type = "source")`
+   ([documentation](https://atri-biostats.github.io/ADNIMERGE2/)).
+2. Separately download the gene-expression profile (Genetic Data -> "Gene Expression" study on
+   [ida.loni.usc.edu](https://ida.loni.usc.edu)) and its accompanying probe manifest.
+   Downlaod these two files, having names `ADNI_gene_expression_profile.csv` and `gene_probe_manifest.tsv`, respectively, 
+   from the ADNI genomic data section and place them in the `rawData/` folder.
+
+Once these files and packages are acquired, the supplied pipeline code (`Data_analysis_script.R`) can be executed directly to reproduce the analysis.
+
+
+---
+
+### Dataset Overview & Requirements
+
+The analysis integrates two primary ADNI data sources:
+
+1. **Longitudinal Clinical & Cognitive Data (`ADNIMERGE2` R Package):**
+   - **Response ($y$):** Mini-Mental State Examination (MMSE) scores (`MMSCORE`) measured repeatedly across visits.
+   - **Conditioning Covariates ($X_C$):** Baseline age, gender, education level (`EDUC`), baseline diagnosis (`DX`), and APOE $\varepsilon4$ allele count (`apoe4`).
+   - **Time Trajectory ($Z$):** Visit time measured in years from baseline ($Z_0 = 1$ for random intercept, $Z_1 = \text{Time}$ for random slope).
+
+2. **Gene Expression Profiles (`ADNI_gene_expression_profile.csv`):**
+   - Whole-blood transcriptomic profiling using Affymetrix Human Genome U219 arrays (49,386 probe sets).
+   - Matched against sample manifest metadata (`gene_probe_manifest.tsv`).
+
+---
+
+### Data Assembly & Preprocessing Pipeline
+
+The assembly module executes the following sequential steps:
+
+1. **Inclusion Criteria:**
+   - Restricts cohort to the target study (`ADNI2`).
+   - Filters participants with at least $3$ longitudinal visits ($\ge 3$ MMSE records).
+   - Retains complete cases with respect to required conditioning covariates.
+
+2. **Transcriptomic Quality Control & Batch Correction:**
+   - **Batch Correction:** Applies Empirical Bayes batch correction (`sva::ComBat`) across Affymetrix plate identifiers.
+   - **Control Filtering:** Removes Affymetrix internal control probes (`AFFX-*`).
+   - **Annotation Matching:** Drops unmapped probes lacking official HGNC gene symbols.
+   - **Variance Filtering:** Filters out non-informative probes falling below a specified empirical variance quantile.
+
+3. **Sample Alignment & Matrix Construction:**
+   - Aligns baseline gene expression arrays ($p$ probes) with repeated visit records ($n$ total visits across $m$ unique participants).
+   - Generates both probe-level ($X_p$) and gene-level aggregated matrices ($X_{\text{gene}}$, retaining the probe with maximum interquartile range per gene).
+
+---
+
+### High-Dimensional Screening & Stability Selection
+
+**Screening Methods**: The pipeline evaluates screening models by conditioning on clinical covariates ($X_C$) while screening transcriptomic predictors:
+
+| Method Code | Type | Description |
+| :--- | :--- | :--- |
+| `MLE` / `REML` | Benchmark | Standard ML / REML estimator based screening under marginal LMMs|
+| `TPCc` | Benchmark | Two-stage Partial Correlation Conditioning |
+| `cv-P ($\alpha$)` | DPD (Proposed) | DPD-SISP using cross-validated proxy estimators ($\alpha \in \{0.1, 0.3, 0.5\}$) |
+| `I0-P ($\alpha$)` | DPD (Proposed) | DPD-SISP using null intercept-only proxy estimators ($\alpha \in \{0.1, 0.3, 0.5\}$) |
+| `no-P ($\alpha$)` | DPD (Baseline) | DPD-SIS ignoring random effects structure, i.e., DPD-SISP with null proxy ($\alpha \in \{0.1, 0.3, 0.5\}$) |
+
+**Screen Size Conventions**: 
+Screening is performed at target size $d = \lfloor n / \log n \rfloor$ (record-count convention).
+Other applicable option is $d = \lfloor m / \log m \rfloor$ (subject-count convention).
+
+**Complementary Pair Stability Selection (CPSS)**: 
+To control false discoveries under high-dimensional noise and potential outliers:
+- Evaluates selection frequencies across $B = 25$ subsampling splits ($2B = 50$ half-runs).
+- Aggregates empirical selection probabilities $\hat{\pi}_j$ across methods to identify highly stable biomarker signatures.
+
+---
+
+### Instructions for Execution
+
+First, install the additionally required packages for batch correction, gene expression preprocessing, parallel execution, and reproducible RNG streams:
+```r
+if (!requireNamespace("BiocManager", quietly = TRUE)) 
+  install.packages("BiocManager")
+
+BiocManager::install("sva")                          # only if batch correction is turned on
+install.packages(c("VennDiagram", "UpSetR"))         # used by summary_results.R's diagrams
+
+install.packages(c("foreach", "doParallel", "doRNG"))
+```
+
+(Note: Ensure `ADNIMERGE2` is installed from the official ADNI portal as described above).
+
 <br>
 
-## Citation
+
+
+#### Option A: Running interactively in `R` / `RStudio`
+
+1. Open the R session from the package root directory.
+2. Edit configuration options in `Data_analysis_script.R`, if desired.
+3. Execute the script:
+
+```R
+source("Data_analysis_script.R")
+```
+
+#### Option B: Running from terminal / command line
+
+```bash
+# Execute in background with log output
+Rscript Data_analysis_script.R
+```
+
+
+### Generated Output Files
+
+* `DerivedData_ADNI2_MMSCORE_...rds`: Cleaned long-format analysis dataset and expression matrices.
+* `DerivedData_ADNI2_MMSCORE_..._screeningResults.rds`: Full-sample marginal screening ranks and top gene lists.
+* `DerivedData_ADNI2_MMSCORE_..._cpss_results.rds`: Stability selection probabilities and selection frequency tables.
+* `DerivedData_ADNI2_MMSCORE_..._pipeline_log.txt`: Timestamped execution log file.
+
+
+<br>
+
+---
+
+---
+
+
+### Citation
 
 If you use this code, please cite:
 
@@ -267,10 +417,16 @@ If you use this code, please cite:
 }
 ```
 
-## Contact
+### License
+
+All code and scripts in this repository are released under the [MIT
+License](https://opensource.org/licenses/MIT),
+which permits their reuse, modification, and distribution for academic or 
+commercial purposes, provided that the original copyright notice and permission notice are included.
+
+### Contact
 
 For questions regarding the code or the associated paper, 
-please contact Dr. Abhik Ghosh at abhik.ghosh.stat@gmail.com.
+please contact **Dr. Abhik Ghosh** at *abhik.ghosh.stat@gmail.com*.
 
 Bug reports, suggestions, and pull requests are welcome. 
-
