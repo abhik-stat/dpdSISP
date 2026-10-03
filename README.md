@@ -176,12 +176,12 @@ All user-configurable parameters are defined at the beginning of
 
 Contamination Schemes (C0)--(C5) are as specified in the manuscript (they can be changed under the settings `CONTAM`): 
 
-* **$C0$**: Clean baseline data (0% contamination).
-* **$C1$**: Casewise additive contamination on the response vector $y$ ($5\%$ and $10\%$).
-* **$C2$**: Casewise additive contamination on the first active fixed-effect predictors ($5\%$ and $10\%$).
-* **$C3$**: High-leverage outlier contamination on the first inactive fixed-effect predictors ($5\%$ and $10\%$).
-* **$C4$**: High-leverage outlier contamination on random-effect design matrix $Z$ ($5\%$ and $10\%$).
-* **$C5$**: Cluster-level block contamination affecting both response $y$ and predictors $X$ ($20\%$ clusters).
+* (C0): Clean baseline data (0% contamination).
+* (C1): Casewise additive contamination on the response vector $y$ ($5\%$ and $10\%$).
+* (C2): Casewise additive contamination on the first active fixed-effect predictors ($5\%$ and $10\%$).
+* (C3): High-leverage outlier contamination on the first inactive fixed-effect predictors ($5\%$ and $10\%$).
+* (C4): High-leverage outlier contamination on random-effect design matrix $Z$ ($5\%$ and $10\%$).
+* (C5): Cluster-level block contamination affecting both response $y$ and predictors $X$ ($20\%$ clusters).
 
 ---
 
@@ -335,9 +335,9 @@ The assembly module executes the following sequential steps:
 | :--- | :--- | :--- |
 | `MLE` / `REML` | Benchmark | Standard ML / REML estimator based screening under marginal LMMs|
 | `TPCc` | Benchmark | Two-stage Partial Correlation Conditioning |
-| `cv-P ($\alpha$)` | DPD (Proposed) | DPD-SISP using cross-validated proxy estimators ($\alpha \in \{0.1, 0.3, 0.5\}$) |
-| `I0-P ($\alpha$)` | DPD (Proposed) | DPD-SISP using null intercept-only proxy estimators ($\alpha \in \{0.1, 0.3, 0.5\}$) |
-| `no-P ($\alpha$)` | DPD (Baseline) | DPD-SIS ignoring random effects structure, i.e., DPD-SISP with null proxy ($\alpha \in \{0.1, 0.3, 0.5\}$) |
+| `cv-P` ($\alpha$) | DPD (Proposed) | DPD-SISP using cross-validated proxy estimators ($\alpha \in \{0.1, 0.3, 0.5\}$) |
+| `I0-P` ($\alpha$) | DPD (Proposed) | DPD-SISP using null intercept-only proxy estimators ($\alpha \in \{0.1, 0.3, 0.5\}$) |
+| `no-P` ($\alpha$) | DPD (Baseline) | DPD-SIS ignoring random effects structure, i.e., DPD-SISP with null proxy ($\alpha \in \{0.1, 0.3, 0.5\}$) |
 
 **Screen Size Conventions**: 
 Screening is performed at target size $d = \lfloor n / \log n \rfloor$ (record-count convention).
